@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Slip Now — Booking Widget</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ============================================================
+     DEMO PAGE SCAFFOLD ONLY — everything in this block is just
+     to preview the widget next to a banner column. None of the
+     .bsn-page-shell / .bsn-banner-col rules are part of the
+     widget itself; they will not exist on the live site.
+  ============================================================ */
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #EEF0F7;
+            font-family: 'Work Sans', sans-serif;
+            padding: clamp(16px, 4vw, 48px);
+        }
+
+        .bsn-page-shell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(16px, 3vw, 32px);
+            max-width: 1180px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        .bsn-form-col {
+            flex: 1 1 420px;
+            min-width: 0;
+        }
+
+        .bsn-banner-col {
+            flex: 1 1 320px;
+            min-width: 0;
+            min-height: 520px;
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.10), transparent 45%),
+                linear-gradient(155deg, #0816C1 0%, #060D8C 62%, #050A6E 100%);
+            color: #fff;
+            padding: clamp(28px, 4vw, 44px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: 'Work Sans', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bsn-banner-col::after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            bottom: -60px;
+            width: 260px;
+            height: 260px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 50%;
+        }
+
+        .bsn-banner-eyebrow {
+            font-size: 13px;
+            letter-spacing: .02em;
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .bsn-banner-col h2 {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-weight: 700;
+            font-size: clamp(28px, 4vw, 38px);
+            line-height: 1.08;
+            margin: 14px 0 12px;
+        }
+
+        .bsn-banner-col p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, .85);
+            max-width: 40ch;
+        }
+
+        .bsn-banner-stat {
+            display: flex;
+            gap: 28px;
+            margin-top: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bsn-banner-stat div b {
+            display: block;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .bsn-banner-stat div span {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, .72);
+        }
+
+        @media (max-width: 760px) {
+            .bsn-banner-col {
+                min-height: 260px;
+            }
+        }
+
+        /* ============================================================
+     WIDGET — everything below (scoped to .bsn-booking-widget)
+     is the actual deliverable. Drop this markup + these two
+     <style>/<script> blocks anywhere on the page; the wrapper
+     class keeps every rule scoped, and width:100% + max-width
+     lets it sit comfortably in a flexible column next to a
+     banner, full-width on mobile, or standalone.
+  ============================================================ */
+        .bsn-booking-widget {
+            --bsn-primary: #0816C1;
+            --bsn-primary-dark: #060D8C;
+            --bsn-primary-tint: #EDEFFC;
+            --bsn-primary-tint-2: #F6F7FD;
+            --bsn-ink: #12142B;
+            --bsn-ink-soft: #5B5E76;
+            --bsn-ink-faint: #8B8EA3;
+            --bsn-line: #E2E3EF;
+            --bsn-surface: #FFFFFF;
+            --bsn-success: #147A4B;
+            --bsn-success-tint: #E9F6EF;
+            --bsn-error: #C8203D;
+            --bsn-error-tint: #FCEBEE;
+            --bsn-radius: 14px;
+            --bsn-radius-sm: 9px;
+
+            width: 100%;
+            max-width: 540px;
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--bsn-ink);
+            background: var(--bsn-surface);
+            border: 1px solid var(--bsn-line);
+            border-radius: var(--bsn-radius);
+            box-shadow: 0 1px 2px rgba(18, 20, 43, 0.04), 0 18px 40px -24px rgba(18, 20, 43, 0.35);
+            overflow: hidden;
+        }
+
+        .bsn-booking-widget * {
+            box-sizing: border-box;
+        }
+
+        .bsn-booking-widget button {
+            font-family: inherit;
+        }
+
+        /* -- Tabs -------------------------------------------------- */
+        .bsn-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 12px 12px 0;
+            background: var(--bsn-primary-tint-2);
+            border-bottom: 1px solid var(--bsn-line);
+        }
+
+        .bsn-tab {
+            flex: 1 1 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            text-align: left;
+            cursor: pointer;
+            background: var(--bsn-surface);
+            border: 1px solid var(--bsn-line);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 10px 12px;
+            margin-bottom: -1px;
+            transition: background .15s ease, border-color .15s ease, transform .1s ease;
+            position: relative;
+        }
+
+        .bsn-tab:hover {
+            background: var(--bsn-primary-tint);
+        }
+
+        .bsn-tab-icon {
+            flex: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bsn-primary-tint);
+            color: var(--bsn-primary);
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .bsn-tab-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .bsn-tab-title {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-weight: 600;
+            font-size: 15.5px;
+            line-height: 1.15;
+            color: var(--bsn-ink);
+        }
+
+        .bsn-tab-sub {
+            display: block;
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 400;
+            font-size: 11.5px;
+            color: var(--bsn-ink-soft);
+            margin-top: 1px;
+        }
+
+        .bsn-tab-price {
+            display: inline-block;
+            margin-top: 4px;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--bsn-primary);
+        }
+
+        .bsn-tab[aria-selected="true"] {
+            background: var(--bsn-surface);
+            border-color: var(--bsn-line);
+            box-shadow: 0 -2px 0 var(--bsn-primary) inset;
+        }
+
+        .bsn-tab[aria-selected="true"] .bsn-tab-icon {
+            background: var(--bsn-primary);
+            color: #fff;
+        }
+
+        .bsn-tab[aria-selected="false"] {
+            opacity: .82;
+        }
+
+        .bsn-tab:focus-visible {
+            outline: 2px solid var(--bsn-primary);
+            outline-offset: 2px;
+        }
+
+        /* -- Context strip ------------------------------------------ */
+        .bsn-context {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bsn-primary-tint);
+            border-bottom: 1px solid var(--bsn-line);
+        }
+
+        .bsn-context p {
+            margin: 0;
+            font-size: 12.5px;
+            line-height: 1.4;
+            color: var(--bsn-ink-soft);
+            max-width: 31ch;
+        }
+
+        .bsn-context-price {
+            flex: none;
+            text-align: right;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+        }
+
+        .bsn-context-price .bsn-from {
+            display: block;
+            font-size: 10px;
+            color: var(--bsn-ink-faint);
+            font-weight: 500;
+        }
+
+        .bsn-context-price .bsn-amt {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--bsn-primary);
+            line-height: 1;
+        }
+
+        /* -- Form body ------------------------------------------------ */
+        .bsn-panel {
+            display: none;
+            padding: 14px 14px 16px;
+        }
+
+        .bsn-panel.is-active {
+            display: block;
+        }
+
+        .bsn-panel-body {
+            padding: 14px 16px 16px;
+        }
+
+        .bsn-fieldset {
+            border: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .bsn-row {
+            margin-bottom: 10px;
+        }
+
+        .bsn-row-pair {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bsn-row-pair>.bsn-row {
+            flex: 1 1 0;
+        }
+
+        .bsn-label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--bsn-ink);
+            margin-bottom: 5px;
+            letter-spacing: .01em;
+        }
+
+        .bsn-input,
+        .bsn-select {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--bsn-line);
+            border-radius: var(--bsn-radius-sm);
+            font-size: 13.8px;
+            font-family: 'Work Sans', sans-serif;
+            color: var(--bsn-ink);
+            background: var(--bsn-surface);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .bsn-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235B5E76' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 34px;
+        }
+
+        .bsn-input::placeholder {
+            color: var(--bsn-ink-faint);
+        }
+
+        .bsn-input:focus,
+        .bsn-select:focus {
+            outline: none;
+            border-color: var(--bsn-primary);
+            box-shadow: 0 0 0 3.5px var(--bsn-primary-tint);
+        }
+
+        .bsn-row.has-error .bsn-input,
+        .bsn-row.has-error .bsn-select {
+            border-color: var(--bsn-error);
+            background: var(--bsn-error-tint);
+        }
+
+        .bsn-row.has-error .bsn-input:focus,
+        .bsn-row.has-error .bsn-select:focus {
+            box-shadow: 0 0 0 3.5px rgba(200, 32, 61, 0.14);
+        }
+
+        .bsn-error-msg {
+            display: none;
+            font-size: 12px;
+            color: var(--bsn-error);
+            margin-top: 5px;
+        }
+
+        .bsn-row.has-error .bsn-error-msg {
+            display: block;
+        }
+
+        .bsn-swap-link {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--bsn-primary);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .bsn-swap-link:hover {
+            color: var(--bsn-primary-dark);
+        }
+
+        .bsn-hint {
+            font-size: 11.5px;
+            color: var(--bsn-ink-faint);
+            margin-top: 5px;
+        }
+
+        /* -- Vehicle price recap for form B --------------------------- */
+        .bsn-price-recap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bsn-primary-tint-2);
+            border: 1px dashed var(--bsn-line);
+            border-radius: var(--bsn-radius-sm);
+            padding: 9px 12px;
+            margin-bottom: 12px;
+        }
+
+        .bsn-price-recap span:first-child {
+            font-size: 12px;
+            color: var(--bsn-ink-soft);
+        }
+
+        .bsn-price-recap span:last-child {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--bsn-primary);
+        }
+
+        /* -- Submit ----------------------------------------------------- */
+        .bsn-submit {
+            width: 100%;
+            height: 44px;
+            border: none;
+            border-radius: var(--bsn-radius-sm);
+            background: var(--bsn-primary);
+            color: #fff;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            margin-top: 4px;
+            transition: background .15s ease, transform .08s ease;
+        }
+
+        .bsn-submit:hover {
+            background: var(--bsn-primary-dark);
+        }
+
+        .bsn-submit:active {
+            transform: translateY(1px);
+        }
+
+        .bsn-submit:disabled {
+            cursor: default;
+            background: var(--bsn-primary-dark);
+            opacity: .85;
+        }
+
+        .bsn-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: bsn-spin .7s linear infinite;
+        }
+
+        .bsn-submit.is-loading .bsn-spinner {
+            display: inline-block;
+        }
+
+        .bsn-submit.is-loading .bsn-submit-label {
+            opacity: .92;
+        }
+
+        @keyframes bsn-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .bsn-fine {
+            text-align: center;
+            font-size: 11px;
+            color: var(--bsn-ink-faint);
+            margin-top: 10px;
+        }
+
+        /* -- Confirmation state ------------------------------------------ */
+        .bsn-confirm {
+            display: none;
+            padding: 30px 24px 28px;
+            text-align: center;
+        }
+
+        .bsn-confirm.is-active {
+            display: block;
+        }
+
+        .bsn-stamp {
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            border: 2px dashed var(--bsn-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bsn-success);
+            transform: rotate(-8deg);
+        }
+
+        .bsn-stamp svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .bsn-confirm h3 {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 6px;
+        }
+
+        .bsn-confirm>p {
+            font-size: 13.5px;
+            color: var(--bsn-ink-soft);
+            max-width: 34ch;
+            margin: 0 auto 18px;
+            line-height: 1.55;
+        }
+
+        .bsn-confirm-card {
+            text-align: left;
+            background: var(--bsn-primary-tint-2);
+            border: 1px solid var(--bsn-line);
+            border-radius: var(--bsn-radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 18px;
+        }
+
+        .bsn-confirm-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
+            padding: 5px 0;
+        }
+
+        .bsn-confirm-row span:first-child {
+            color: var(--bsn-ink-soft);
+        }
+
+        .bsn-confirm-row span:last-child {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .bsn-confirm-ref {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 12.5px;
+            letter-spacing: .04em;
+            color: var(--bsn-ink-faint);
+            margin-bottom: 16px;
+        }
+
+        .bsn-confirm-ref b {
+            color: var(--bsn-ink);
+        }
+
+        .bsn-reset {
+            background: none;
+            border: 1px solid var(--bsn-line);
+            color: var(--bsn-ink);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: var(--bsn-radius-sm);
+            cursor: pointer;
+        }
+
+        .bsn-reset:hover {
+            border-color: var(--bsn-primary);
+            color: var(--bsn-primary);
+        }
+
+        /* -- Responsive ------------------------------------------------- */
+        @media (max-width: 480px) {
+            .bsn-tabs {
+                flex-direction: column;
+                padding: 12px 12px 0;
+                gap: 8px;
+            }
+
+            .bsn-tab {
+                border-radius: 10px;
+                border-bottom: 1px solid var(--bsn-line);
+                margin-bottom: 0;
+            }
+
+            .bsn-tab[aria-selected="true"] {
+                box-shadow: 0 0 0 1.5px var(--bsn-primary) inset;
+            }
+
+            .bsn-context {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .bsn-context-price {
+                text-align: left;
+            }
+
+            .bsn-row-pair {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .bsn-panel {
+                padding: 16px 16px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bsn-page-shell">
+
+        <!-- Demo banner column — replace with your own promo/hero content -->
+        <div class="bsn-banner-col">
+            <div>
+                <span class="bsn-banner-eyebrow">Blue Slip Now · Ingleburn, NSW</span>
+                <h2>NSW blue slips, done properly the first time.</h2>
+                <p>Workshop drop-off from $49, or we'll pick your vehicle up and bring it back the same day.</p>
+            </div>
+            <div class="bsn-banner-stat">
+                <div><b>7 days</b><span>a week booking</span></div>
+                <div><b>Same day</b><span>pickup &amp; drop-off</span></div>
+            </div>
+        </div>
+
+        <div class="bsn-form-col">
+
+            <!-- ======================= WIDGET START ======================= -->
+            <div class="bsn-booking-widget" id="bsnWidget">
+
+                <div class="bsn-tabs" role="tablist" aria-label="Choose a booking type">
+                    <button type="button" class="bsn-tab" id="bsnTabBtnA" role="tab" aria-selected="true"
+                        aria-controls="bsnPanelA">
+                        <span class="bsn-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M14.7 3.3a4 4 0 0 0-5.4 4.9L3.4 14.1a1.5 1.5 0 0 0 0 2.1l1.4 1.4a1.5 1.5 0 0 0 2.1 0l5.9-5.9a4 4 0 0 0 4.9-5.4l-2.6 2.6-2-2 2.6-2.6Z" />
+                            </svg>
+                        </span>
+                        <span>
+                            <span class="bsn-tab-title">Bring it to Ingleburn</span>
+                            <span class="bsn-tab-sub">Drop off at our workshop</span>
+                            <span class="bsn-tab-price">From $49</span>
+                        </span>
+                    </button>
+                    <button type="button" class="bsn-tab" id="bsnTabBtnB" role="tab" aria-selected="false"
+                        aria-controls="bsnPanelB">
+                        <span class="bsn-tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 15.5V7.8c0-.44.36-.8.8-.8H13v9.3" />
+                                <path d="M13 10.2h4.3L20.5 14v2.3h-2" />
+                                <circle cx="7.6" cy="16.8" r="1.7" />
+                                <circle cx="16.7" cy="16.8" r="1.7" />
+                                <path d="M9.3 16.8h5.7" />
+                                <path d="M3 12.4h6.6" />
+                            </svg>
+                        </span>
+                        <span>
+                            <span class="bsn-tab-title">We come to you</span>
+                            <span class="bsn-tab-sub">Same-day pickup &amp; drop-off</span>
+                            <span class="bsn-tab-price">From $349</span>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- ============ PANEL A — Bring to workshop ============ -->
+                <div class="bsn-panel is-active" id="bsnPanelA" role="tabpanel" aria-labelledby="bsnTabBtnA">
+
+                    <div class="bsn-context">
+                        <p>Full blue slip inspection at our Ingleburn workshop — walk it in, we'll have you sorted same
+                            visit.</p>
+                        <span class="bsn-context-price"><span class="bsn-from">From</span><span
+                                class="bsn-amt">$49</span></span>
+                    </div>
+
+                    <form id="bsnFormA" novalidate>
+                        <div class="bsn-fieldset">
+                            <div class="bsn-panel-body" style="padding:18px 20px 20px;">
+
+                                <div class="bsn-row-pair">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-name">Full name</label>
+                                        <input class="bsn-input" type="text" id="bsnA-name" name="name"
+                                            placeholder="Jordan Smith" autocomplete="name">
+                                        <p class="bsn-error-msg">Enter your full name.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-email">Email</label>
+                                        <input class="bsn-input" type="email" id="bsnA-email" name="email"
+                                            placeholder="jordan@email.com" autocomplete="email">
+                                        <p class="bsn-error-msg">Enter a valid email address.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bsn-row-pair">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-mobile">Mobile</label>
+                                        <input class="bsn-input" type="tel" id="bsnA-mobile" name="mobile"
+                                            placeholder="04XX XXX XXX" inputmode="numeric" maxlength="12"
+                                            autocomplete="tel">
+                                        <p class="bsn-error-msg">Enter a valid Australian mobile number.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-vehicle">Vehicle type</label>
+                                        <select class="bsn-select" id="bsnA-vehicle" name="vehicle">
+                                            <option value="">Select vehicle type</option>
+                                            <option value="car">Car</option>
+                                            <option value="bike">Bike</option>
+                                            <option value="trailer">Trailer / Caravan</option>
+                                        </select>
+                                        <p class="bsn-error-msg">Select a vehicle type.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bsn-row" id="bsnA-plateRow">
+                                    <label class="bsn-label" for="bsnA-plate">Number plate</label>
+                                    <input class="bsn-input" type="text" id="bsnA-plate" name="plate"
+                                        placeholder="e.g. BS45QR" maxlength="8" style="text-transform:uppercase;">
+                                    <p class="bsn-error-msg">Enter your number plate.</p>
+                                    <button type="button" class="bsn-swap-link" id="bsnA-swapToMake">Enter make &amp;
+                                        model instead</button>
+                                </div>
+
+                                <div class="bsn-row-pair" id="bsnA-makeRow" style="display:none;">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-make">Make</label>
+                                        <input class="bsn-input" type="text" id="bsnA-make" name="make"
+                                            placeholder="Toyota">
+                                        <p class="bsn-error-msg">Enter the make.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-model">Model</label>
+                                        <input class="bsn-input" type="text" id="bsnA-model" name="model"
+                                            placeholder="Corolla">
+                                        <p class="bsn-error-msg">Enter the model.</p>
+                                        <button type="button" class="bsn-swap-link" id="bsnA-swapToPlate">Enter number
+                                            plate instead</button>
+                                    </div>
+                                </div>
+
+                                <div class="bsn-row-pair">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-day">Booking day</label>
+                                        <input class="bsn-input" type="date" id="bsnA-day" name="day">
+                                        <p class="bsn-error-msg">Choose an upcoming date.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnA-time">Time slot</label>
+                                        <select class="bsn-select" id="bsnA-time" name="time">
+                                            <option value="">Select a time</option>
+                                            <option>8:00 AM – 9:00 AM</option>
+                                            <option>9:00 AM – 10:00 AM</option>
+                                            <option>10:00 AM – 11:00 AM</option>
+                                            <option>11:00 AM – 12:00 PM</option>
+                                            <option>12:00 PM – 1:00 PM</option>
+                                            <option>1:00 PM – 2:00 PM</option>
+                                            <option>2:00 PM – 3:00 PM</option>
+                                            <option>3:00 PM – 4:00 PM</option>
+                                        </select>
+                                        <p class="bsn-error-msg">Select a time slot.</p>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="bsn-submit" id="bsnA-submit">
+                                    <span class="bsn-spinner" aria-hidden="true"></span>
+                                    <span class="bsn-submit-label">Get my quote</span>
+                                </button>
+                                <p class="bsn-fine">Prices from $49 AUD, GST inc. Final quote depends on inspection.</p>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="bsn-confirm" id="bsnA-confirm">
+                        <div class="bsn-stamp" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 12.5 9.5 18 20 6.5" />
+                            </svg>
+                        </div>
+                        <h3>Booking request received</h3>
+                        <p>We've got your workshop booking. Our Ingleburn team will call or text to confirm your slot.
+                        </p>
+                        <div class="bsn-confirm-card" id="bsnA-confirmDetails"></div>
+                        <p class="bsn-confirm-ref">Reference: <b id="bsnA-ref"></b></p>
+                        <button type="button" class="bsn-reset" data-reset="A">Make another booking</button>
+                    </div>
+
+                </div>
+
+                <!-- ============ PANEL B — We pickup / drop off ============ -->
+                <div class="bsn-panel" id="bsnPanelB" role="tabpanel" aria-labelledby="bsnTabBtnB">
+
+                    <div class="bsn-context">
+                        <p>We collect your vehicle, run the full inspection, and drop it back to you — same day, across
+                            Sydney.</p>
+                        <span class="bsn-context-price"><span class="bsn-from">From</span><span class="bsn-amt"
+                                id="bsnB-headerPrice">$349</span></span>
+                    </div>
+
+                    <form id="bsnFormB" novalidate>
+                        <div class="bsn-fieldset">
+                            <div class="bsn-panel-body" style="padding:18px 20px 20px;">
+
+                                <div class="bsn-row-pair">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnB-name">Full name</label>
+                                        <input class="bsn-input" type="text" id="bsnB-name" name="name"
+                                            placeholder="Jordan Smith" autocomplete="name">
+                                        <p class="bsn-error-msg">Enter your full name.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnB-mobile">Mobile</label>
+                                        <input class="bsn-input" type="tel" id="bsnB-mobile" name="mobile"
+                                            placeholder="04XX XXX XXX" inputmode="numeric" maxlength="12"
+                                            autocomplete="tel">
+                                        <p class="bsn-error-msg">Enter a valid Australian mobile number.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bsn-row-pair">
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnB-email">Email</label>
+                                        <input class="bsn-input" type="email" id="bsnB-email" name="email"
+                                            placeholder="jordan@email.com" autocomplete="email">
+                                        <p class="bsn-error-msg">Enter a valid email address.</p>
+                                    </div>
+                                    <div class="bsn-row">
+                                        <label class="bsn-label" for="bsnB-vehicle">Vehicle type</label>
+                                        <select class="bsn-select" id="bsnB-vehicle" name="vehicle">
+                                            <option value="">Select vehicle type</option>
+                                            <option value="car" data-price="349">Car — $349</option>
+                                            <option value="bike" data-price="499">Bike — $499</option>
+                                            <option value="trailer" data-price="499">Trailer / Caravan — $499</option>
+                                        </select>
+                                        <p class="bsn-error-msg">Select a vehicle type.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bsn-row">
+                                    <label class="bsn-label" for="bsnB-pickup">Pickup location</label>
+                                    <input class="bsn-input" type="text" id="bsnB-pickup" name="pickup"
+                                        placeholder="Street address, suburb">
+                                    <p class="bsn-error-msg">Enter the pickup address.</p>
+                                </div>
+
+                                <div class="bsn-row">
+                                    <label class="bsn-label" for="bsnB-time">Preferred time</label>
+                                    <select class="bsn-select" id="bsnB-time" name="time">
+                                        <option value="">Select a time window</option>
+                                        <option>As soon as possible</option>
+                                        <option>Morning (8am – 11am)</option>
+                                        <option>Midday (11am – 1pm)</option>
+                                        <option>Afternoon (1pm – 4pm)</option>
+                                    </select>
+                                    <p class="bsn-error-msg">Select a preferred time.</p>
+                                </div>
+
+                                <div class="bsn-price-recap">
+                                    <span>Quote incl. inspection fee</span>
+                                    <span id="bsnB-recapPrice">$349</span>
+                                </div>
+
+                                <button type="submit" class="bsn-submit" id="bsnB-submit">
+                                    <span class="bsn-spinner" aria-hidden="true"></span>
+                                    <span class="bsn-submit-label">Get my quote inc. inspection fee</span>
+                                </button>
+                                <p class="bsn-fine">$349 car · $499 bike, trailer or caravan. GST inc.</p>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="bsn-confirm" id="bsnB-confirm">
+                        <div class="bsn-stamp" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 12.5 9.5 18 20 6.5" />
+                            </svg>
+                        </div>
+                        <h3>Pickup request received</h3>
+                        <p>We've got your pickup booking. Our driver will call or text to confirm the collection window.
+                        </p>
+                        <div class="bsn-confirm-card" id="bsnB-confirmDetails"></div>
+                        <p class="bsn-confirm-ref">Reference: <b id="bsnB-ref"></b></p>
+                        <button type="button" class="bsn-reset" data-reset="B">Make another booking</button>
+                    </div>
+
+                </div>
+
+            </div>
+            <!-- ======================== WIDGET END ======================== -->
+
+        </div>
+
+
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            var widget = document.getElementById('bsnWidget');
+            if (!widget) return;
+
+            /* ---------------- Tabs ---------------- */
+            var tabBtnA = document.getElementById('bsnTabBtnA');
+            var tabBtnB = document.getElementById('bsnTabBtnB');
+            var panelA = document.getElementById('bsnPanelA');
+            var panelB = document.getElementById('bsnPanelB');
+
+            function activateTab(which) {
+                var aActive = which === 'A';
+                tabBtnA.setAttribute('aria-selected', aActive ? 'true' : 'false');
+                tabBtnB.setAttribute('aria-selected', aActive ? 'false' : 'true');
+                panelA.classList.toggle('is-active', aActive);
+                panelB.classList.toggle('is-active', !aActive);
+            }
+            tabBtnA.addEventListener('click', function () { activateTab('A'); });
+            tabBtnB.addEventListener('click', function () { activateTab('B'); });
+
+            /* ---------------- Helpers ---------------- */
+            function $(id) { return document.getElementById(id); }
+
+            function setError(rowEl, show) {
+                rowEl.classList.toggle('has-error', !!show);
+            }
+
+            function isVisible(el) {
+                return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+            }
+
+            var NAME_RE = /^[A-Za-z' -]{2,60}$/;
+            var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var PLATE_RE = /^[A-Z0-9]{2,8}$/;
+
+            function validAuMobile(raw) {
+                var digits = raw.replace(/\D/g, '');
+                return /^0\d{9}$/.test(digits);
+            }
+
+            /* ---------------- AU mobile formatting (max 10 digits) ---------------- */
+            function bindMobileField(input) {
+                input.addEventListener('input', function () {
+                    var digits = input.value.replace(/\D/g, '').slice(0, 10);
+                    var formatted = digits;
+                    if (digits.length > 6) {
+                        formatted = digits.slice(0, 4) + ' ' + digits.slice(4, 7) + ' ' + digits.slice(7);
+                    } else if (digits.length > 3) {
+                        formatted = digits.slice(0, 4) + ' ' + digits.slice(4);
+                    }
+                    input.value = formatted;
+                });
+            }
+            bindMobileField($('bsnA-mobile'));
+            bindMobileField($('bsnB-mobile'));
+
+            /* ---------------- Plate uppercase ---------------- */
+            var plateInput = $('bsnA-plate');
+            plateInput.addEventListener('input', function () {
+                plateInput.value = plateInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+            });
+
+            /* ---------------- Booking-day min date (tomorrow, always relative) ---------------- */
+            var dayInput = $('bsnA-day');
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            dayInput.min = tomorrow.toISOString().slice(0, 10);
+
+            /* ---------------- Plate <-> Make/Model swap ---------------- */
+            var plateRow = $('bsnA-plateRow');
+            var makeRow = $('bsnA-makeRow');
+            $('bsnA-swapToMake').addEventListener('click', function () {
+                plateRow.style.display = 'none';
+                makeRow.style.display = 'flex';
+                setError(plateRow, false);
+                $('bsnA-make').focus();
+            });
+            $('bsnA-swapToPlate').addEventListener('click', function () {
+                makeRow.style.display = 'none';
+                plateRow.style.display = 'block';
+                setError($('bsnA-make').closest('.bsn-row'), false);
+                setError($('bsnA-model').closest('.bsn-row'), false);
+                plateInput.focus();
+            });
+
+            /* ---------------- Vehicle price sync (Form B) ---------------- */
+            var vehicleSelectB = $('bsnB-vehicle');
+            var recapPrice = $('bsnB-recapPrice');
+            var headerPrice = $('bsnB-headerPrice');
+            vehicleSelectB.addEventListener('change', function () {
+                var opt = vehicleSelectB.options[vehicleSelectB.selectedIndex];
+                var price = opt && opt.getAttribute('data-price');
+                recapPrice.textContent = price ? '$' + price : '—';
+                headerPrice.textContent = price ? '$' + price : '$349';
+            });
+
+            /* ---------------- Validation ---------------- */
+            function validateFormA() {
+                var ok = true;
+
+                function check(input, valid) {
+                    var row = input.closest('.bsn-row');
+                    setError(row, !valid);
+                    if (!valid) ok = false;
+                }
+
+                check($('bsnA-name'), NAME_RE.test($('bsnA-name').value.trim()));
+                check($('bsnA-email'), EMAIL_RE.test($('bsnA-email').value.trim()));
+                check($('bsnA-mobile'), validAuMobile($('bsnA-mobile').value));
+                check($('bsnA-vehicle'), $('bsnA-vehicle').value !== '');
+
+                if (isVisible(plateRow)) {
+                    check(plateInput, PLATE_RE.test(plateInput.value.trim()));
+                } else {
+                    check($('bsnA-make'), $('bsnA-make').value.trim().length >= 2);
+                    check($('bsnA-model'), $('bsnA-model').value.trim().length >= 1);
+                }
+
+                check(dayInput, dayInput.value !== '' && dayInput.value >= dayInput.min);
+                check($('bsnA-time'), $('bsnA-time').value !== '');
+
+                return ok;
+            }
+
+            function validateFormB() {
+                var ok = true;
+                function check(input, valid) {
+                    var row = input.closest('.bsn-row');
+                    setError(row, !valid);
+                    if (!valid) ok = false;
+                }
+                check($('bsnB-name'), NAME_RE.test($('bsnB-name').value.trim()));
+                check($('bsnB-mobile'), validAuMobile($('bsnB-mobile').value));
+                check($('bsnB-email'), EMAIL_RE.test($('bsnB-email').value.trim()));
+                check($('bsnB-pickup'), $('bsnB-pickup').value.trim().length >= 4);
+                check(vehicleSelectB, vehicleSelectB.value !== '');
+                check($('bsnB-time'), $('bsnB-time').value !== '');
+                return ok;
+            }
+
+            /* ---------------- Reference number ---------------- */
+            function makeRef(prefix) {
+                return prefix + '-' + Math.floor(100000 + Math.random() * 900000);
+            }
+
+            function fmtVehicle(v) {
+                return v === 'car' ? 'Car' : v === 'bike' ? 'Bike' : v === 'trailer' ? 'Trailer / Caravan' : v;
+            }
+
+            function fmtDate(iso) {
+                if (!iso) return '';
+                var d = new Date(iso + 'T00:00:00');
+                return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+            }
+
+            /* ---------------- Submit handlers ---------------- */
+            function handleSubmit(formEl, submitBtn, validateFn, onSuccess) {
+                formEl.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    if (submitBtn.classList.contains('is-loading')) return;
+                    if (!validateFn()) {
+                        var firstError = formEl.querySelector('.has-error .bsn-input, .has-error .bsn-select');
+                        if (firstError) firstError.focus();
+                        return;
+                    }
+                    submitBtn.classList.add('is-loading');
+                    submitBtn.disabled = true;
+                    Array.prototype.forEach.call(formEl.querySelectorAll('input, select, button'), function (el) {
+                        el.disabled = true;
+                    });
+
+                    setTimeout(function () {
+                        submitBtn.classList.remove('is-loading');
+                        onSuccess();
+                    }, 1500);
+                });
+            }
+
+            handleSubmit($('bsnFormA'), $('bsnA-submit'), validateFormA, function () {
+                var vehicle = fmtVehicle($('bsnA-vehicle').value);
+                var idBits = isVisible(plateRow)
+                    ? plateInput.value
+                    : ($('bsnA-make').value + ' ' + $('bsnA-model').value);
+
+                $('bsnA-confirmDetails').innerHTML =
+                    '<div class="bsn-confirm-row"><span>Vehicle</span><span>' + vehicle + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Plate / model</span><span>' + idBits + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Day</span><span>' + fmtDate(dayInput.value) + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Time slot</span><span>' + $('bsnA-time').value + '</span></div>';
+                $('bsnA-ref').textContent = makeRef('BSN-WS');
+
+                $('bsnFormA').style.display = 'none';
+                $('bsnA-confirm').classList.add('is-active');
+            });
+
+            handleSubmit($('bsnFormB'), $('bsnB-submit'), validateFormB, function () {
+                var vehicle = fmtVehicle(vehicleSelectB.value);
+                $('bsnB-confirmDetails').innerHTML =
+                    '<div class="bsn-confirm-row"><span>Vehicle</span><span>' + vehicle + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Pickup</span><span>' + $('bsnB-pickup').value + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Time window</span><span>' + $('bsnB-time').value + '</span></div>' +
+                    '<div class="bsn-confirm-row"><span>Quote</span><span>' + recapPrice.textContent + '</span></div>';
+                $('bsnB-ref').textContent = makeRef('BSN-PU');
+
+                $('bsnFormB').style.display = 'none';
+                $('bsnB-confirm').classList.add('is-active');
+            });
+
+            /* ---------------- Reset ---------------- */
+            function resetForm(which) {
+                var formEl = which === 'A' ? $('bsnFormA') : $('bsnFormB');
+                var confirmEl = which === 'A' ? $('bsnA-confirm') : $('bsnB-confirm');
+                formEl.reset();
+                Array.prototype.forEach.call(formEl.querySelectorAll('input, select, button'), function (el) {
+                    el.disabled = false;
+                });
+                Array.prototype.forEach.call(formEl.querySelectorAll('.bsn-row'), function (row) {
+                    setError(row, false);
+                });
+                if (which === 'A') {
+                    plateRow.style.display = 'block';
+                    makeRow.style.display = 'none';
+                } else {
+                    recapPrice.textContent = '—';
+                    headerPrice.textContent = '$349';
+                }
+                confirmEl.classList.remove('is-active');
+                formEl.style.display = 'block';
+            }
+            document.querySelectorAll('.bsn-reset').forEach(function (btn) {
+                btn.addEventListener('click', function () { resetForm(btn.getAttribute('data-reset')); });
+            });
+
+        })();
+    </script>
+</body>
+
+</html>
